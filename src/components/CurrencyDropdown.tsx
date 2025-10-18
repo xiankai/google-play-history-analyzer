@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { ParsedPurchase } from "../types";
 
 interface CurrencyDropdownProps {
@@ -6,7 +5,7 @@ interface CurrencyDropdownProps {
   selectedCurrency: string;
   setSelectedCurrency: (currency: string) => void;
   conversionRates: Record<string, Record<string, string>>;
-  setConversionRates: (rates: Record<string, Record<string, string>>) => void;
+  setConversionRates: React.Dispatch<React.SetStateAction<Record<string, Record<string, string>>>>;
 }
 
 export default function CurrencyDropdown({

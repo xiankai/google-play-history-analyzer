@@ -12,7 +12,7 @@ interface TimelineChartViewProps {
   selectedCurrency: string;
   setSelectedCurrency: (currency: string) => void;
   conversionRates: Record<string, Record<string, string>>;
-  setConversionRates: (rates: Record<string, Record<string, string>>) => void;
+  setConversionRates: React.Dispatch<React.SetStateAction<Record<string, Record<string, string>>>>;
   darkMode: boolean;
 }
 

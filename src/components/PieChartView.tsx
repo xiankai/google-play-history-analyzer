@@ -10,7 +10,7 @@ interface PieChartViewProps {
   selectedCurrency: string;
   setSelectedCurrency: (currency: string) => void;
   conversionRates: Record<string, Record<string, string>>;
-  setConversionRates: (rates: Record<string, Record<string, string>>) => void;
+  setConversionRates: React.Dispatch<React.SetStateAction<Record<string, Record<string, string>>>>;
   darkMode: boolean;
 }
 
@@ -169,7 +169,7 @@ export default function PieChartView({
     },
     dataLabels: {
       enabled: true,
-      formatter: (val: number, opts) => {
+      formatter: (_: number, opts) => {
         const label = opts.w.globals.labels[opts.seriesIndex];
         const value = opts.w.globals.series[opts.seriesIndex];
         return `${label}\n${formatCurrency(value, selectedCurrency)}`;
