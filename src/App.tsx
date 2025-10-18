@@ -16,32 +16,36 @@ function App() {
     const saved = localStorage.getItem("darkMode");
     return saved ? JSON.parse(saved) : false;
   });
+  const [selectedCurrency, setSelectedCurrency] = useState<string>("");
 
   useEffect(() => {
     localStorage.setItem("darkMode", JSON.stringify(darkMode));
-    document.documentElement.setAttribute("data-theme", darkMode ? "dark" : "light");
+    document.documentElement.setAttribute(
+      "data-theme",
+      darkMode ? "dark" : "light"
+    );
   }, [darkMode]);
 
   const parseInvoicePrice = (
     invoicePrice?: string
-  ): { amount: string; currency: string } => {
+  ): { amount: number; currency: string } => {
     if (!invoicePrice) {
-      return { amount: "N/A", currency: "" };
+      return { amount: 0, currency: "" };
     }
 
     // Match any string before a number
     const match = invoicePrice.match(/^([^\d]*)([\d.,]+)/);
 
     if (!match) {
-      return { amount: invoicePrice, currency: "" };
+      return { amount: 0, currency: "" };
     }
 
     const [, currencyStr, numStr] = match;
-    const amount = parseFloat(numStr.replace(/,/g, "")).toString();
+    const amount = parseFloat(numStr.replace(/,/g, ""));
 
     return {
       amount,
-      currency: currencyStr.trim(),
+      currency: amount > 0 ? currencyStr.trim() : "",
     };
   };
 
@@ -83,6 +87,7 @@ function App() {
       });
 
       setPurchases(parsed);
+      setSelectedCurrency(parsed.length > 0 ? parsed[0].currency : "");
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     } catch (err) {
@@ -195,7 +200,6 @@ function App() {
                   className="file-input file-input-bordered file-input-primary w-full"
                 />
               </div>
-
             </div>
           </div>
         </div>
@@ -205,27 +209,45 @@ function App() {
             <div className="flex justify-center gap-2 mt-8">
               <button
                 onClick={() => setViewMode("table")}
-                className={`btn ${viewMode === "table" ? "btn-primary" : "btn-outline"}`}
+                className={`btn ${
+                  viewMode === "table" ? "btn-primary" : "btn-outline"
+                }`}
               >
                 Table View
               </button>
               <button
                 onClick={() => setViewMode("pie")}
-                className={`btn ${viewMode === "pie" ? "btn-primary" : "btn-outline"}`}
+                className={`btn ${
+                  viewMode === "pie" ? "btn-primary" : "btn-outline"
+                }`}
               >
                 App Breakdown
               </button>
               <button
                 onClick={() => setViewMode("bar")}
-                className={`btn ${viewMode === "bar" ? "btn-primary" : "btn-outline"}`}
+                className={`btn ${
+                  viewMode === "bar" ? "btn-primary" : "btn-outline"
+                }`}
               >
                 Monthly Spending
               </button>
             </div>
 
             {viewMode === "table" && <TableView purchases={purchases} />}
-            {viewMode === "pie" && <PieChartView purchases={purchases} />}
-            {viewMode === "bar" && <BarChartView purchases={purchases} />}
+            {viewMode === "pie" && (
+              <PieChartView
+                purchases={purchases}
+                selectedCurrency={selectedCurrency}
+                setSelectedCurrency={setSelectedCurrency}
+              />
+            )}
+            {viewMode === "bar" && (
+              <BarChartView
+                purchases={purchases}
+                selectedCurrency={selectedCurrency}
+                setSelectedCurrency={setSelectedCurrency}
+              />
+            )}
           </>
         )}
       </div>

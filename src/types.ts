@@ -14,7 +14,7 @@ export interface PurchaseData {
 
 export interface ParsedPurchase {
   title: string;
-  amount: string;
+  amount: number;
   currency: string;
   date: string;
   documentType: string;

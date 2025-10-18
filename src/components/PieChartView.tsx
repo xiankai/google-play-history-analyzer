@@ -2,12 +2,19 @@ import { useState, useEffect } from "react";
 import { VictoryPie } from "victory";
 import type { VictorySliceTTargetType } from "victory";
 import { ParsedPurchase } from "../types";
+import CurrencyDropdown from "./CurrencyDropdown";
 
 interface PieChartViewProps {
   purchases: ParsedPurchase[];
+  selectedCurrency: string;
+  setSelectedCurrency: (currency: string) => void;
 }
 
-export default function PieChartView({ purchases }: PieChartViewProps) {
+export default function PieChartView({
+  purchases,
+  selectedCurrency,
+  setSelectedCurrency,
+}: PieChartViewProps) {
   const [selectedApp, setSelectedApp] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
 
@@ -29,14 +36,13 @@ export default function PieChartView({ purchases }: PieChartViewProps) {
 
   // Filter out N/A amounts and group by app
   const appData = purchases
-    .filter((p) => p.amount !== "N/A")
+    .filter((p) => p.amount > 0)
     .reduce((acc, purchase) => {
       const app = purchase.appName || "Other";
-      const amount = parseFloat(purchase.amount);
       if (!acc[app]) {
         acc[app] = 0;
       }
-      acc[app] += amount;
+      acc[app] += purchase.amount;
       return acc;
     }, {} as Record<string, number>);
 
@@ -46,7 +52,7 @@ export default function PieChartView({ purchases }: PieChartViewProps) {
     (sum, [, amount]) => sum + amount,
     0
   );
-  const threshold = totalAmount * 0.05;
+  // const threshold = totalAmount * 0.05;
 
   let runningTotal = 0;
   let othersTotal = 0;
@@ -84,28 +90,25 @@ export default function PieChartView({ purchases }: PieChartViewProps) {
             const app = p.appName || "Other";
             // Check if this app was in the Others group
             return (
-              !top95Apps.some(([topApp]) => topApp === app) &&
-              p.amount !== "N/A"
+              !top95Apps.some(([topApp]) => topApp === app) && p.amount > 0
             );
           })
           .reduce((acc, purchase) => {
             const app = purchase.appName || "Other";
-            const amount = parseFloat(purchase.amount);
             if (!acc[app]) {
               acc[app] = 0;
             }
-            acc[app] += amount;
+            acc[app] += purchase.amount;
             return acc;
           }, {} as Record<string, number>)
       : purchases
-          .filter((p) => p.appName === selectedApp && p.amount !== "N/A")
+          .filter((p) => p.appName === selectedApp && p.amount > 0)
           .reduce((acc, purchase) => {
             const title = purchase.title || "Unknown";
-            const amount = parseFloat(purchase.amount);
             if (!acc[title]) {
               acc[title] = 0;
             }
-            acc[title] += amount;
+            acc[title] += purchase.amount;
             return acc;
           }, {} as Record<string, number>)
     : null;
@@ -156,13 +159,22 @@ export default function PieChartView({ purchases }: PieChartViewProps) {
     <div className="mt-8">
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
-          <h2 className="card-title text-2xl mb-4">
-            Spending Breakdown by App
-          </h2>
-          <p className="text-lg mb-4">
-            Total Spent:{" "}
-            <span className="font-bold">${totalSpent.toFixed(2)}</span>
-          </p>
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h2 className="card-title text-2xl mb-4">
+                Spending Breakdown by App
+              </h2>
+              <p className="text-lg mb-4">
+                Total Spent:{" "}
+                <span className="font-bold">${totalSpent.toFixed(2)}</span>
+              </p>
+            </div>
+            <CurrencyDropdown
+              purchases={purchases}
+              selectedCurrency={selectedCurrency}
+              setSelectedCurrency={setSelectedCurrency}
+            />
+          </div>
 
           {selectedApp && (
             <button

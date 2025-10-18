@@ -1,25 +1,30 @@
 import { VictoryBar, VictoryChart, VictoryAxis, VictoryTheme } from "victory";
 import { ParsedPurchase } from "../types";
+import CurrencyDropdown from "./CurrencyDropdown";
 
 interface BarChartViewProps {
   purchases: ParsedPurchase[];
+  selectedCurrency: string;
+  setSelectedCurrency: (currency: string) => void;
 }
 
-export default function BarChartView({ purchases }: BarChartViewProps) {
+export default function BarChartView({
+  purchases,
+  selectedCurrency,
+  setSelectedCurrency,
+}: BarChartViewProps) {
   // Group by month and sum amounts
   const monthlyData = purchases
-    .filter((p) => p.amount !== "N/A")
+    .filter((p) => p.amount > 0)
     .reduce((acc, purchase) => {
       const date = new Date(purchase.date);
       const monthKey = `${date.getFullYear()}-${String(
         date.getMonth() + 1
       ).padStart(2, "0")}`;
-      const amount = parseFloat(purchase.amount);
-
       if (!acc[monthKey]) {
         acc[monthKey] = 0;
       }
-      acc[monthKey] += amount;
+      acc[monthKey] += purchase.amount;
       return acc;
     }, {} as Record<string, number>);
 
@@ -36,11 +41,20 @@ export default function BarChartView({ purchases }: BarChartViewProps) {
     <div className="mt-8">
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
-          <h2 className="card-title text-2xl mb-4">Monthly Spending</h2>
-          <p className="text-lg mb-4">
-            Total Spent:{" "}
-            <span className="font-bold">${totalSpent.toFixed(2)}</span>
-          </p>
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h2 className="card-title text-2xl mb-4">Monthly Spending</h2>
+              <p className="text-lg mb-4">
+                Total Spent:{" "}
+                <span className="font-bold">${totalSpent.toFixed(2)}</span>
+              </p>
+            </div>
+            <CurrencyDropdown
+              purchases={purchases}
+              selectedCurrency={selectedCurrency}
+              setSelectedCurrency={setSelectedCurrency}
+            />
+          </div>
 
           <div className="flex justify-center">
             <VictoryChart
