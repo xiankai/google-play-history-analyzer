@@ -24,14 +24,30 @@ export default function CurrencyDropdown({
 
   const otherCurrencies = currencies.filter((c) => c !== selectedCurrency);
 
+  const formatRate = (num: number): string => {
+    const fixed2dp = num.toFixed(2);
+    const sigFig2 = String(Number(num.toPrecision(2)));
+
+    // Use whichever gives more meaningful digits (not "0.00")
+    if (fixed2dp === "0.00") {
+      return sigFig2;
+    }
+
+    // Count non-zero digits after decimal point
+    const dpDigits = fixed2dp.split('.')[1]?.replace(/0+$/, '').length || 0;
+    const sfDigits = sigFig2.split('.')[1]?.replace(/0+$/, '').length || 0;
+
+    return sfDigits > dpDigits ? sigFig2 : fixed2dp;
+  };
+
   const handleValueInSelectedChange = (currency: string, value: string) => {
     const numValue = parseFloat(value);
     if (isNaN(numValue) || numValue === 0) {
       return;
     }
 
-    const directRate = numValue.toPrecision(2);
-    const inverseRate = (1 / numValue).toPrecision(2);
+    const directRate = formatRate(numValue);
+    const inverseRate = formatRate(1 / numValue);
 
     setConversionRates((prev) => ({
       ...prev,
@@ -52,8 +68,8 @@ export default function CurrencyDropdown({
       return;
     }
 
-    const inverseRate = (1 / numValue).toPrecision(2);
-    const directRate = numValue.toPrecision(2);
+    const inverseRate = formatRate(1 / numValue);
+    const directRate = formatRate(numValue);
 
     setConversionRates((prev) => ({
       ...prev,
@@ -104,6 +120,7 @@ export default function CurrencyDropdown({
                       type="number"
                       step="0.01"
                       className="input input-bordered input-sm w-full"
+                      key={`${currency}-${selectedCurrency}-${conversionRates[currency]?.[selectedCurrency]}`}
                       defaultValue={conversionRates[currency]?.[selectedCurrency] || ""}
                       onBlur={(e) =>
                         handleValueInSelectedChange(currency, e.target.value)
@@ -125,6 +142,7 @@ export default function CurrencyDropdown({
                       type="number"
                       step="0.01"
                       className="input input-bordered input-sm w-full"
+                      key={`${selectedCurrency}-${currency}-${conversionRates[selectedCurrency]?.[currency]}`}
                       defaultValue={conversionRates[selectedCurrency]?.[currency] || ""}
                       onBlur={(e) =>
                         handleValueOfSelectedChange(currency, e.target.value)
