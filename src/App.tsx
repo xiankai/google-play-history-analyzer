@@ -17,6 +17,9 @@ function App() {
     return saved ? JSON.parse(saved) : false;
   });
   const [selectedCurrency, setSelectedCurrency] = useState<string>("");
+  const [conversionRates, setConversionRates] = useState<
+    Record<string, Record<string, string>>
+  >({});
 
   useEffect(() => {
     localStorage.setItem("darkMode", JSON.stringify(darkMode));
@@ -239,6 +242,8 @@ function App() {
                 purchases={purchases}
                 selectedCurrency={selectedCurrency}
                 setSelectedCurrency={setSelectedCurrency}
+                conversionRates={conversionRates}
+                setConversionRates={setConversionRates}
               />
             )}
             {viewMode === "bar" && (
@@ -246,6 +251,8 @@ function App() {
                 purchases={purchases}
                 selectedCurrency={selectedCurrency}
                 setSelectedCurrency={setSelectedCurrency}
+                conversionRates={conversionRates}
+                setConversionRates={setConversionRates}
               />
             )}
           </>

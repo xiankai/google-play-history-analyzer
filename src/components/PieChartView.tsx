@@ -8,15 +8,30 @@ interface PieChartViewProps {
   purchases: ParsedPurchase[];
   selectedCurrency: string;
   setSelectedCurrency: (currency: string) => void;
+  conversionRates: Record<string, Record<string, string>>;
+  setConversionRates: (rates: Record<string, Record<string, string>>) => void;
 }
 
 export default function PieChartView({
   purchases,
   selectedCurrency,
   setSelectedCurrency,
+  conversionRates,
+  setConversionRates,
 }: PieChartViewProps) {
   const [selectedApp, setSelectedApp] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
+
+  const convertAmount = (amount: number, fromCurrency: string): number => {
+    if (fromCurrency === selectedCurrency) {
+      return amount;
+    }
+    const rate = conversionRates[fromCurrency]?.[selectedCurrency];
+    if (!rate) {
+      return 0; // Return 0 if no conversion rate is set
+    }
+    return amount * parseFloat(rate);
+  };
 
   useEffect(() => {
     const checkDarkMode = () => {
@@ -42,7 +57,7 @@ export default function PieChartView({
       if (!acc[app]) {
         acc[app] = 0;
       }
-      acc[app] += purchase.amount;
+      acc[app] += convertAmount(purchase.amount, purchase.currency);
       return acc;
     }, {} as Record<string, number>);
 
@@ -98,7 +113,7 @@ export default function PieChartView({
             if (!acc[app]) {
               acc[app] = 0;
             }
-            acc[app] += purchase.amount;
+            acc[app] += convertAmount(purchase.amount, purchase.currency);
             return acc;
           }, {} as Record<string, number>)
       : purchases
@@ -108,7 +123,7 @@ export default function PieChartView({
             if (!acc[title]) {
               acc[title] = 0;
             }
-            acc[title] += purchase.amount;
+            acc[title] += convertAmount(purchase.amount, purchase.currency);
             return acc;
           }, {} as Record<string, number>)
     : null;
@@ -173,6 +188,8 @@ export default function PieChartView({
               purchases={purchases}
               selectedCurrency={selectedCurrency}
               setSelectedCurrency={setSelectedCurrency}
+              conversionRates={conversionRates}
+              setConversionRates={setConversionRates}
             />
           </div>
 
@@ -186,7 +203,7 @@ export default function PieChartView({
           )}
 
           {!selectedApp ? (
-            <div className="flex justify-center">
+            <div className="flex justify-center h-screen">
               <VictoryPie
                 data={appChartData}
                 colorScale="qualitative"

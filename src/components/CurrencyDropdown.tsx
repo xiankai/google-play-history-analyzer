@@ -1,26 +1,23 @@
-import { useState } from "react";
 import { ParsedPurchase } from "../types";
 
 interface CurrencyDropdownProps {
   purchases: ParsedPurchase[];
   selectedCurrency: string;
   setSelectedCurrency: (currency: string) => void;
+  conversionRates: Record<string, Record<string, string>>;
+  setConversionRates: (rates: Record<string, Record<string, string>>) => void;
 }
 
 export default function CurrencyDropdown({
   purchases,
   selectedCurrency,
   setSelectedCurrency,
+  conversionRates,
+  setConversionRates,
 }: CurrencyDropdownProps) {
   const currencies = Array.from(
     new Set(purchases.map((p) => p.currency))
   ).filter(Boolean);
-
-  // Map structure: { fromCurrency: { toCurrency: "rate" } }
-  // Both directions stored as strings with 2 decimal places
-  const [conversionRates, setConversionRates] = useState<
-    Record<string, Record<string, string>>
-  >({});
 
   const otherCurrencies = currencies.filter((c) => c !== selectedCurrency);
 
@@ -49,17 +46,17 @@ export default function CurrencyDropdown({
     const directRate = formatRate(numValue);
     const inverseRate = formatRate(1 / numValue);
 
-    setConversionRates((prev) => ({
-      ...prev,
+    setConversionRates({
+      ...conversionRates,
       [currency]: {
-        ...prev[currency],
+        ...conversionRates[currency],
         [selectedCurrency]: directRate,
       },
       [selectedCurrency]: {
-        ...prev[selectedCurrency],
+        ...conversionRates[selectedCurrency],
         [currency]: inverseRate,
       },
-    }));
+    });
   };
 
   const handleValueOfSelectedChange = (currency: string, value: string) => {
@@ -71,17 +68,17 @@ export default function CurrencyDropdown({
     const inverseRate = formatRate(1 / numValue);
     const directRate = formatRate(numValue);
 
-    setConversionRates((prev) => ({
-      ...prev,
+    setConversionRates({
+      ...conversionRates,
       [currency]: {
-        ...prev[currency],
+        ...conversionRates[currency],
         [selectedCurrency]: inverseRate,
       },
       [selectedCurrency]: {
-        ...prev[selectedCurrency],
+        ...conversionRates[selectedCurrency],
         [currency]: directRate,
       },
-    }));
+    });
   };
 
   return (

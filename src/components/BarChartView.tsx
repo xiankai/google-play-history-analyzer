@@ -6,13 +6,28 @@ interface BarChartViewProps {
   purchases: ParsedPurchase[];
   selectedCurrency: string;
   setSelectedCurrency: (currency: string) => void;
+  conversionRates: Record<string, Record<string, string>>;
+  setConversionRates: (rates: Record<string, Record<string, string>>) => void;
 }
 
 export default function BarChartView({
   purchases,
   selectedCurrency,
   setSelectedCurrency,
+  conversionRates,
+  setConversionRates,
 }: BarChartViewProps) {
+  const convertAmount = (amount: number, fromCurrency: string): number => {
+    if (fromCurrency === selectedCurrency) {
+      return amount;
+    }
+    const rate = conversionRates[fromCurrency]?.[selectedCurrency];
+    if (!rate) {
+      return 0; // Return 0 if no conversion rate is set
+    }
+    return amount * parseFloat(rate);
+  };
+
   // Group by month and sum amounts
   const monthlyData = purchases
     .filter((p) => p.amount > 0)
@@ -24,7 +39,7 @@ export default function BarChartView({
       if (!acc[monthKey]) {
         acc[monthKey] = 0;
       }
-      acc[monthKey] += purchase.amount;
+      acc[monthKey] += convertAmount(purchase.amount, purchase.currency);
       return acc;
     }, {} as Record<string, number>);
 
@@ -53,6 +68,8 @@ export default function BarChartView({
               purchases={purchases}
               selectedCurrency={selectedCurrency}
               setSelectedCurrency={setSelectedCurrency}
+              conversionRates={conversionRates}
+              setConversionRates={setConversionRates}
             />
           </div>
 
