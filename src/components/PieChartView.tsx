@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
-import { VictoryPie } from "victory";
-import type { VictorySliceTTargetType } from "victory";
+import { useState } from "react";
+import Chart from "react-apexcharts";
+import type { ApexOptions } from "apexcharts";
 import { ParsedPurchase } from "../types";
 import CurrencyDropdown from "./CurrencyDropdown";
+import { formatCurrency } from "../utils";
 
 interface PieChartViewProps {
   purchases: ParsedPurchase[];
@@ -10,6 +11,7 @@ interface PieChartViewProps {
   setSelectedCurrency: (currency: string) => void;
   conversionRates: Record<string, Record<string, string>>;
   setConversionRates: (rates: Record<string, Record<string, string>>) => void;
+  darkMode: boolean;
 }
 
 export default function PieChartView({
@@ -18,9 +20,9 @@ export default function PieChartView({
   setSelectedCurrency,
   conversionRates,
   setConversionRates,
+  darkMode,
 }: PieChartViewProps) {
   const [selectedApp, setSelectedApp] = useState<string | null>(null);
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
 
   const convertAmount = (amount: number, fromCurrency: string): number => {
     if (fromCurrency === selectedCurrency) {
@@ -28,26 +30,10 @@ export default function PieChartView({
     }
     const rate = conversionRates[fromCurrency]?.[selectedCurrency];
     if (!rate) {
-      return 0; // Return 0 if no conversion rate is set
+      return 0;
     }
     return amount * parseFloat(rate);
   };
-
-  useEffect(() => {
-    const checkDarkMode = () => {
-      const theme = document.documentElement.getAttribute("data-theme");
-      setIsDarkMode(theme === "dark");
-    };
-
-    checkDarkMode();
-    const observer = new MutationObserver(checkDarkMode);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["data-theme"],
-    });
-
-    return () => observer.disconnect();
-  }, []);
 
   // Filter out N/A amounts and group by app
   const appData = purchases
@@ -67,7 +53,6 @@ export default function PieChartView({
     (sum, [, amount]) => sum + amount,
     0
   );
-  // const threshold = totalAmount * 0.05;
 
   let runningTotal = 0;
   let othersTotal = 0;
@@ -82,28 +67,20 @@ export default function PieChartView({
     }
   });
 
-  const appChartData = top95Apps.map(([app, total]) => ({
-    x: app,
-    y: total,
-    label: `${app}\n$${total.toFixed(2)}`,
-  }));
+  const appChartLabels = top95Apps.map(([app]) => app);
+  const appChartSeries = top95Apps.map(([, total]) => total);
 
   if (othersTotal > 0) {
-    appChartData.push({
-      x: "Others",
-      y: othersTotal,
-      label: `Others\n$${othersTotal.toFixed(2)}`,
-    });
+    appChartLabels.push("Others");
+    appChartSeries.push(othersTotal);
   }
 
   // When an app is selected, group by title
-  // If "Others" is selected, show all apps that were grouped into Others
   const titleData = selectedApp
     ? selectedApp === "Others"
       ? purchases
           .filter((p) => {
             const app = p.appName || "Other";
-            // Check if this app was in the Others group
             return (
               !top95Apps.some(([topApp]) => topApp === app) && p.amount > 0
             );
@@ -129,7 +106,8 @@ export default function PieChartView({
     : null;
 
   // Apply same 95% logic to title data
-  let titleChartData: { x: string; y: number; label: string }[] = [];
+  let titleChartLabels: string[] = [];
+  let titleChartSeries: number[] = [];
   if (titleData) {
     const sortedTitleData = Object.entries(titleData).sort(
       ([, a], [, b]) => b - a
@@ -152,23 +130,63 @@ export default function PieChartView({
       }
     });
 
-    titleChartData = top95Titles.map(([title, total]) => ({
-      x: title,
-      y: total,
-      label: `${title}\n$${total.toFixed(2)}`,
-    }));
+    titleChartLabels = top95Titles.map(([title]) => title);
+    titleChartSeries = top95Titles.map(([, total]) => total);
 
     if (titleOthersTotal > 0) {
-      titleChartData.push({
-        x: "Others",
-        y: titleOthersTotal,
-        label: `Others\n$${titleOthersTotal.toFixed(2)}`,
-      });
+      titleChartLabels.push("Others");
+      titleChartSeries.push(titleOthersTotal);
     }
   }
 
-  const totalSpent = appChartData.reduce((sum, item) => sum + item.y, 0);
-  const targets: VictorySliceTTargetType[] = ["data", "labels"];
+  const totalSpent = appChartSeries.reduce((sum, val) => sum + val, 0);
+
+  const chartOptions: ApexOptions = {
+    chart: {
+      type: "pie",
+      background: "transparent",
+      events: {
+        dataPointSelection: (_event, _chartContext, config) => {
+          const label = !selectedApp
+            ? appChartLabels[config.dataPointIndex]
+            : null;
+          if (label) {
+            setSelectedApp(label);
+          }
+        },
+      },
+    },
+    labels: !selectedApp ? appChartLabels : titleChartLabels,
+    theme: {
+      mode: darkMode ? "dark" : "light",
+    },
+    plotOptions: {
+      pie: {
+        dataLabels: {
+          minAngleToShowLabel: 10,
+        },
+      },
+    },
+    dataLabels: {
+      enabled: true,
+      formatter: (val: number, opts) => {
+        const label = opts.w.globals.labels[opts.seriesIndex];
+        const value = opts.w.globals.series[opts.seriesIndex];
+        return `${label}\n${formatCurrency(value, selectedCurrency)}`;
+      },
+    },
+    legend: {
+      position: "bottom",
+      labels: {
+        colors: darkMode ? "#ffffff" : "#000000",
+      },
+    },
+    tooltip: {
+      y: {
+        formatter: (val: number) => formatCurrency(val, selectedCurrency),
+      },
+    },
+  };
 
   return (
     <div className="mt-8">
@@ -181,16 +199,20 @@ export default function PieChartView({
               </h2>
               <p className="text-lg mb-4">
                 Total Spent:{" "}
-                <span className="font-bold">${totalSpent.toFixed(2)}</span>
+                <span className="font-bold">
+                  {formatCurrency(totalSpent, selectedCurrency)}
+                </span>
               </p>
             </div>
-            <CurrencyDropdown
-              purchases={purchases}
-              selectedCurrency={selectedCurrency}
-              setSelectedCurrency={setSelectedCurrency}
-              conversionRates={conversionRates}
-              setConversionRates={setConversionRates}
-            />
+            <div className="flex flex-col items-end gap-1 w-2/5">
+              <CurrencyDropdown
+                purchases={purchases}
+                selectedCurrency={selectedCurrency}
+                setSelectedCurrency={setSelectedCurrency}
+                conversionRates={conversionRates}
+                setConversionRates={setConversionRates}
+              />
+            </div>
           </div>
 
           {selectedApp && (
@@ -203,119 +225,23 @@ export default function PieChartView({
           )}
 
           {!selectedApp ? (
-            <div className="flex justify-center h-screen">
-              <VictoryPie
-                data={appChartData}
-                colorScale="qualitative"
-                width={600}
-                height={400}
-                labelRadius={({ innerRadius }) =>
-                  ((innerRadius as number) || 100) + 60
-                }
-                events={targets.map((target) => ({
-                  target,
-                  eventHandlers: {
-                    onClick: () => {
-                      return [
-                        {
-                          target,
-                          mutation: (props) => {
-                            setSelectedApp(props.datum.x);
-                          },
-                        },
-                      ];
-                    },
-                    onMouseOver: () => {
-                      return [
-                        {
-                          target,
-                          mutation: (props) => ({
-                            style: {
-                              ...props.style,
-                              fillOpacity: 0.5,
-                            },
-                          }),
-                        },
-                      ];
-                    },
-                    onMouseOut: () => {
-                      return [
-                        {
-                          target,
-                          mutation: () => {},
-                        },
-                      ];
-                    },
-                  },
-                }))}
-                style={{
-                  data: {
-                    cursor: "pointer",
-                  },
-                  labels: {
-                    cursor: "pointer",
-                    fill: isDarkMode ? "white" : "black",
-                  },
-                }}
+            <div className="flex justify-center">
+              <Chart
+                options={chartOptions}
+                series={appChartSeries}
+                type="pie"
+                width="600"
               />
             </div>
           ) : (
             <>
               <h3 className="text-xl font-semibold mb-2">{selectedApp}</h3>
               <div className="flex justify-center">
-                <VictoryPie
-                  data={titleChartData}
-                  colorScale="qualitative"
-                  width={600}
-                  height={400}
-                  labelRadius={({ innerRadius }) =>
-                    ((innerRadius as number) || 100) + 60
-                  }
-                  events={targets.map((target) => ({
-                    target,
-                    eventHandlers: {
-                      onClick: () => {
-                        return [
-                          {
-                            target,
-                            mutation: (props) => {
-                              setSelectedApp(props.datum.x);
-                            },
-                          },
-                        ];
-                      },
-                      onMouseOver: () => {
-                        return [
-                          {
-                            target,
-                            mutation: (props) => ({
-                              style: {
-                                ...props.style,
-                                fillOpacity: 0.5,
-                              },
-                            }),
-                          },
-                        ];
-                      },
-                      onMouseOut: () => {
-                        return [
-                          {
-                            target,
-                            mutation: () => {},
-                          },
-                        ];
-                      },
-                    },
-                  }))}
-                  style={{
-                    data: {
-                      cursor: "pointer",
-                    },
-                    labels: {
-                      cursor: "pointer",
-                      fill: isDarkMode ? "white" : "black",
-                    },
-                  }}
+                <Chart
+                  options={chartOptions}
+                  series={titleChartSeries}
+                  type="pie"
+                  width="600"
                 />
               </div>
             </>

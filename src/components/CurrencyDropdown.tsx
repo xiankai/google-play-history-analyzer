@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { ParsedPurchase } from "../types";
 
 interface CurrencyDropdownProps {
@@ -31,8 +32,8 @@ export default function CurrencyDropdown({
     }
 
     // Count non-zero digits after decimal point
-    const dpDigits = fixed2dp.split('.')[1]?.replace(/0+$/, '').length || 0;
-    const sfDigits = sigFig2.split('.')[1]?.replace(/0+$/, '').length || 0;
+    const dpDigits = fixed2dp.split(".")[1]?.replace(/0+$/, "").length || 0;
+    const sfDigits = sigFig2.split(".")[1]?.replace(/0+$/, "").length || 0;
 
     return sfDigits > dpDigits ? sigFig2 : fixed2dp;
   };
@@ -46,17 +47,17 @@ export default function CurrencyDropdown({
     const directRate = formatRate(numValue);
     const inverseRate = formatRate(1 / numValue);
 
-    setConversionRates({
-      ...conversionRates,
+    setConversionRates((prev) => ({
+      ...prev,
       [currency]: {
-        ...conversionRates[currency],
+        ...prev[currency],
         [selectedCurrency]: directRate,
       },
       [selectedCurrency]: {
-        ...conversionRates[selectedCurrency],
+        ...prev[selectedCurrency],
         [currency]: inverseRate,
       },
-    });
+    }));
   };
 
   const handleValueOfSelectedChange = (currency: string, value: string) => {
@@ -68,23 +69,23 @@ export default function CurrencyDropdown({
     const inverseRate = formatRate(1 / numValue);
     const directRate = formatRate(numValue);
 
-    setConversionRates({
-      ...conversionRates,
+    setConversionRates((prev) => ({
+      ...prev,
       [currency]: {
-        ...conversionRates[currency],
+        ...prev[currency],
         [selectedCurrency]: inverseRate,
       },
       [selectedCurrency]: {
-        ...conversionRates[selectedCurrency],
+        ...prev[selectedCurrency],
         [currency]: directRate,
       },
-    });
+    }));
   };
 
   return (
     <div className="form-control">
-      <p className="text-lg mb-4">
-        Currency:{" "}
+      <p className="text-lg mb-4 text-right">
+        <span className="font-bold">Currency to calculate values in: </span>
         <select
           className="select select-bordered select-sm"
           value={selectedCurrency}
@@ -96,6 +97,10 @@ export default function CurrencyDropdown({
             </option>
           ))}
         </select>
+        <div className="text-xs">
+          Filling in the currency conversion rates will give a more accurate
+          estimate of the combined value of purchases in different currencies
+        </div>
       </p>
 
       {otherCurrencies.length > 0 && (
@@ -118,16 +123,22 @@ export default function CurrencyDropdown({
                       step="0.01"
                       className="input input-bordered input-sm w-full"
                       key={`${currency}-${selectedCurrency}-${conversionRates[currency]?.[selectedCurrency]}`}
-                      defaultValue={conversionRates[currency]?.[selectedCurrency] || ""}
+                      defaultValue={
+                        conversionRates[currency]?.[selectedCurrency] || ""
+                      }
                       onBlur={(e) =>
                         handleValueInSelectedChange(currency, e.target.value)
                       }
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
-                          handleValueInSelectedChange(currency, e.currentTarget.value);
+                          handleValueInSelectedChange(
+                            currency,
+                            e.currentTarget.value
+                          );
                           e.currentTarget.blur();
                         } else if (e.key === "Escape") {
-                          e.currentTarget.value = conversionRates[currency]?.[selectedCurrency] || "";
+                          e.currentTarget.value =
+                            conversionRates[currency]?.[selectedCurrency] || "";
                           e.currentTarget.blur();
                         }
                       }}
@@ -140,16 +151,22 @@ export default function CurrencyDropdown({
                       step="0.01"
                       className="input input-bordered input-sm w-full"
                       key={`${selectedCurrency}-${currency}-${conversionRates[selectedCurrency]?.[currency]}`}
-                      defaultValue={conversionRates[selectedCurrency]?.[currency] || ""}
+                      defaultValue={
+                        conversionRates[selectedCurrency]?.[currency] || ""
+                      }
                       onBlur={(e) =>
                         handleValueOfSelectedChange(currency, e.target.value)
                       }
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
-                          handleValueOfSelectedChange(currency, e.currentTarget.value);
+                          handleValueOfSelectedChange(
+                            currency,
+                            e.currentTarget.value
+                          );
                           e.currentTarget.blur();
                         } else if (e.key === "Escape") {
-                          e.currentTarget.value = conversionRates[selectedCurrency]?.[currency] || "";
+                          e.currentTarget.value =
+                            conversionRates[selectedCurrency]?.[currency] || "";
                           e.currentTarget.blur();
                         }
                       }}

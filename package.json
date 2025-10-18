@@ -11,10 +11,11 @@
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
-    "currency.js": "^2.0.4",
+    "apexcharts": "^5.3.5",
+    "country-data-list": "^1.5.5",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "victory": "^37.3.6"
+    "react-apexcharts": "^1.8.0",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",

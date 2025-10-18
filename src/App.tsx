@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { PurchaseData, ParsedPurchase } from "./types";
 import TableView from "./components/TableView";
 import PieChartView from "./components/PieChartView";
-import BarChartView from "./components/BarChartView";
+import TimelineChartView from "./components/TimelineChartView";
 
-type ViewMode = "table" | "pie" | "bar";
+type ViewMode = "table" | "pie-chart" | "timeline";
 
 function App() {
   const [file, setFile] = useState<File | null>(null);
@@ -219,40 +219,42 @@ function App() {
                 Table View
               </button>
               <button
-                onClick={() => setViewMode("pie")}
+                onClick={() => setViewMode("pie-chart")}
                 className={`btn ${
-                  viewMode === "pie" ? "btn-primary" : "btn-outline"
+                  viewMode === "pie-chart" ? "btn-primary" : "btn-outline"
                 }`}
               >
                 App Breakdown
               </button>
               <button
-                onClick={() => setViewMode("bar")}
+                onClick={() => setViewMode("timeline")}
                 className={`btn ${
-                  viewMode === "bar" ? "btn-primary" : "btn-outline"
+                  viewMode === "timeline" ? "btn-primary" : "btn-outline"
                 }`}
               >
-                Monthly Spending
+                Timeline
               </button>
             </div>
 
             {viewMode === "table" && <TableView purchases={purchases} />}
-            {viewMode === "pie" && (
+            {viewMode === "pie-chart" && (
               <PieChartView
                 purchases={purchases}
                 selectedCurrency={selectedCurrency}
                 setSelectedCurrency={setSelectedCurrency}
                 conversionRates={conversionRates}
                 setConversionRates={setConversionRates}
+                darkMode={darkMode}
               />
             )}
-            {viewMode === "bar" && (
-              <BarChartView
+            {viewMode === "timeline" && (
+              <TimelineChartView
                 purchases={purchases}
                 selectedCurrency={selectedCurrency}
                 setSelectedCurrency={setSelectedCurrency}
                 conversionRates={conversionRates}
                 setConversionRates={setConversionRates}
+                darkMode={darkMode}
               />
             )}
           </>
