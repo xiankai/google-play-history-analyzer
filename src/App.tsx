@@ -4,6 +4,7 @@ import TableView from "./components/TableView";
 import PieChartView from "./components/PieChartView";
 import TimelineChartView from "./components/TimelineChartView";
 import TotalSpent from "./components/TotalSpent";
+import CurrencyDisplay from "./components/CurrencyDisplay";
 import GithubIcon from "./components/icons/GithubIcon";
 import SunIcon from "./components/icons/SunIcon";
 import MoonIcon from "./components/icons/MoonIcon";
@@ -22,9 +23,6 @@ function App() {
     return saved ? JSON.parse(saved) : false;
   });
   const [selectedCurrency, setSelectedCurrency] = useState<string>("");
-  const [conversionRates, setConversionRates] = useState<
-    Record<string, Record<string, string>>
-  >({});
 
   useEffect(() => {
     localStorage.setItem("darkMode", JSON.stringify(darkMode));
@@ -177,11 +175,17 @@ function App() {
         </div>
         <div className="flex-none gap-4">
           {purchases.length > 0 && (
-            <TotalSpent
-              purchases={purchases}
-              selectedCurrency={selectedCurrency}
-              conversionRates={conversionRates}
-            />
+            <>
+              <CurrencyDisplay
+                purchases={purchases}
+                selectedCurrency={selectedCurrency}
+                setSelectedCurrency={setSelectedCurrency}
+              />
+              <TotalSpent
+                purchases={purchases}
+                selectedCurrency={selectedCurrency}
+              />
+            </>
           )}
           <div className="flex gap-2">
             <a
@@ -282,7 +286,7 @@ function App() {
 
         {purchases.length > 0 && (
           <>
-            <div className="flex justify-center gap-2 mt-8">
+            <div className="flex justify-center gap-2">
               <button
                 onClick={() => setViewMode("table")}
                 className={`btn ${
@@ -314,9 +318,6 @@ function App() {
               <PieChartView
                 purchases={purchases}
                 selectedCurrency={selectedCurrency}
-                setSelectedCurrency={setSelectedCurrency}
-                conversionRates={conversionRates}
-                setConversionRates={setConversionRates}
                 darkMode={darkMode}
               />
             )}
@@ -324,9 +325,6 @@ function App() {
               <TimelineChartView
                 purchases={purchases}
                 selectedCurrency={selectedCurrency}
-                setSelectedCurrency={setSelectedCurrency}
-                conversionRates={conversionRates}
-                setConversionRates={setConversionRates}
                 darkMode={darkMode}
               />
             )}

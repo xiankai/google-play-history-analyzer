@@ -2,7 +2,6 @@ import { useState } from "react";
 import Chart from "react-apexcharts";
 import type { ApexOptions } from "apexcharts";
 import { ParsedPurchase } from "../types";
-import CurrencyDropdown from "./CurrencyDropdown";
 import { formatCurrency } from "../utils";
 
 type TimeGrouping = "daily" | "monthly" | "yearly";
@@ -10,39 +9,29 @@ type TimeGrouping = "daily" | "monthly" | "yearly";
 interface TimelineChartViewProps {
   purchases: ParsedPurchase[];
   selectedCurrency: string;
-  setSelectedCurrency: (currency: string) => void;
-  conversionRates: Record<string, Record<string, string>>;
-  setConversionRates: React.Dispatch<
-    React.SetStateAction<Record<string, Record<string, string>>>
-  >;
   darkMode: boolean;
 }
 
 export default function TimelineChartView({
   purchases,
   selectedCurrency,
-  setSelectedCurrency,
-  conversionRates,
-  setConversionRates,
   darkMode,
 }: TimelineChartViewProps) {
   const [timeGrouping, setTimeGrouping] = useState<TimeGrouping>("daily");
 
-  const convertAmount = (amount: number, fromCurrency: string): number => {
-    if (fromCurrency === selectedCurrency) {
-      return amount;
-    }
-    const rate = conversionRates[fromCurrency]?.[selectedCurrency];
-    if (!rate) {
-      return 0;
-    }
-    return amount * parseFloat(rate);
-  };
+  const currencies = Array.from(
+    new Set(purchases.map((p) => p.currency))
+  ).filter(Boolean);
 
-  // Group data based on selected time grouping
+  // Group data based on selected time grouping and currency
   const groupedData = purchases
     .filter((p) => p.amount > 0)
     .reduce((acc, purchase) => {
+      // Only process purchases matching the selected currency, or all if ""
+      if (selectedCurrency !== "" && purchase.currency !== selectedCurrency) {
+        return acc;
+      }
+
       const date = new Date(purchase.date);
       let key: string;
 
@@ -57,41 +46,76 @@ export default function TimelineChartView({
         key = `${date.getFullYear()}`; // YYYY
       }
 
-      if (!acc[key]) {
-        acc[key] = 0;
+      const currency = purchase.currency;
+      const dataKey = selectedCurrency === "" ? `${key}|${currency}` : key;
+
+      if (!acc[dataKey]) {
+        acc[dataKey] = { amount: 0, currency };
       }
-      acc[key] += convertAmount(purchase.amount, purchase.currency);
+      acc[dataKey].amount += purchase.amount;
       return acc;
-    }, {} as Record<string, number>);
+    }, {} as Record<string, { amount: number; currency: string }>);
 
-  const chartData = Object.entries(groupedData)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([key, total]) => {
-      let timestamp: number;
-      if (timeGrouping === "daily") {
-        timestamp = new Date(key).getTime();
-      } else if (timeGrouping === "monthly") {
-        timestamp = new Date(key + "-01").getTime();
-      } else {
-        timestamp = new Date(key + "-01-01").getTime();
-      }
-      return {
-        x: timestamp,
-        y: total,
-      };
-    });
+  // When selectedCurrency is "", create multiple series (one per currency)
+  // Otherwise, create a single series
+  const series = selectedCurrency === ""
+    ? currencies.map((currency) => {
+        const currencyData = Object.entries(groupedData)
+          .filter(([, data]) => data.currency === currency)
+          .map(([key, data]) => {
+            const timeKey = key.split("|")[0];
+            let timestamp: number;
+            if (timeGrouping === "daily") {
+              timestamp = new Date(timeKey).getTime();
+            } else if (timeGrouping === "monthly") {
+              timestamp = new Date(timeKey + "-01").getTime();
+            } else {
+              timestamp = new Date(timeKey + "-01-01").getTime();
+            }
+            return {
+              x: timestamp,
+              y: data.amount,
+            };
+          })
+          .sort((a, b) => a.x - b.x);
 
-  const series = [
-    {
-      name:
-        timeGrouping === "daily"
-          ? "Daily Spending"
-          : timeGrouping === "monthly"
-          ? "Monthly Spending"
-          : "Yearly Spending",
-      data: chartData,
-    },
-  ];
+        return {
+          name: `${currency} - ${
+            timeGrouping === "daily"
+              ? "Daily Spending"
+              : timeGrouping === "monthly"
+              ? "Monthly Spending"
+              : "Yearly Spending"
+          }`,
+          data: currencyData,
+        };
+      })
+    : [
+        {
+          name:
+            timeGrouping === "daily"
+              ? "Daily Spending"
+              : timeGrouping === "monthly"
+              ? "Monthly Spending"
+              : "Yearly Spending",
+          data: Object.entries(groupedData)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([key, data]) => {
+              let timestamp: number;
+              if (timeGrouping === "daily") {
+                timestamp = new Date(key).getTime();
+              } else if (timeGrouping === "monthly") {
+                timestamp = new Date(key + "-01").getTime();
+              } else {
+                timestamp = new Date(key + "-01-01").getTime();
+              }
+              return {
+                x: timestamp,
+                y: data.amount,
+              };
+            }),
+        },
+      ];
 
   // Main chart options (detail view)
   const mainChartOptions: ApexOptions = {
@@ -110,7 +134,9 @@ export default function TimelineChartView({
     theme: {
       mode: darkMode ? "dark" : "light",
     },
-    colors: ["#4f46e5"],
+    colors: selectedCurrency === ""
+      ? ["#4f46e5", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"]
+      : ["#4f46e5"],
     stroke: {
       width: 3,
     },
@@ -149,7 +175,12 @@ export default function TimelineChartView({
     },
     yaxis: {
       labels: {
-        formatter: (val: number) => formatCurrency(val, selectedCurrency),
+        formatter: (val: number) => {
+          if (selectedCurrency === "") {
+            return val.toFixed(0);
+          }
+          return formatCurrency(val, selectedCurrency);
+        },
         style: {
           colors: darkMode ? "#ffffff" : "#000000",
         },
@@ -165,7 +196,22 @@ export default function TimelineChartView({
             : "yyyy",
       },
       y: {
-        formatter: (val: number) => formatCurrency(val, selectedCurrency),
+        formatter: (val: number, opts) => {
+          if (selectedCurrency === "") {
+            // Extract currency from series name (e.g., "USD - Daily Spending")
+            const seriesName = opts.w.globals.seriesNames[opts.seriesIndex];
+            const currency = seriesName.split(" - ")[0];
+            return formatCurrency(val, currency);
+          }
+          return formatCurrency(val, selectedCurrency);
+        },
+      },
+    },
+    legend: {
+      show: selectedCurrency === "",
+      position: "top",
+      labels: {
+        colors: darkMode ? "#ffffff" : "#000000",
       },
     },
     grid: {
@@ -174,6 +220,7 @@ export default function TimelineChartView({
   };
 
   // Brush chart options (overview/navigator)
+  const allDataPoints = series.flatMap(s => s.data);
   const brushChartOptions: ApexOptions = {
     chart: {
       id: "brush-chart",
@@ -186,10 +233,10 @@ export default function TimelineChartView({
         // Adjust default selection based on time grouping
         xaxis: {
           min:
-            chartData.length > 0
+            allDataPoints.length > 0
               ? Math.max(
-                  chartData[0].x,
-                  chartData[chartData.length - 1].x -
+                  Math.min(...allDataPoints.map(d => d.x)),
+                  Math.max(...allDataPoints.map(d => d.x)) -
                     (timeGrouping === "daily"
                       ? 90 * 24 * 60 * 60 * 1000 // 90 days
                       : timeGrouping === "monthly"
@@ -198,8 +245,8 @@ export default function TimelineChartView({
                 )
               : undefined,
           max:
-            chartData.length > 0
-              ? chartData[chartData.length - 1].x
+            allDataPoints.length > 0
+              ? Math.max(...allDataPoints.map(d => d.x))
               : undefined,
         },
         fill: {
@@ -217,7 +264,9 @@ export default function TimelineChartView({
     theme: {
       mode: darkMode ? "dark" : "light",
     },
-    colors: ["#4f46e5"],
+    colors: selectedCurrency === ""
+      ? ["#4f46e5", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"]
+      : ["#4f46e5"],
     fill: {
       type: "gradient",
       gradient: {
@@ -242,6 +291,9 @@ export default function TimelineChartView({
         show: false,
       },
     },
+    legend: {
+      show: false,
+    },
     grid: {
       borderColor: darkMode ? "#374151" : "#e5e7eb",
     },
@@ -251,39 +303,26 @@ export default function TimelineChartView({
     <div className="mt-8">
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <select
-                  value={timeGrouping}
-                  onChange={(e) =>
-                    setTimeGrouping(e.target.value as TimeGrouping)
-                  }
-                  className="select select-bordered select-sm"
-                >
-                  <option value="daily">Daily</option>
-                  <option value="monthly">Monthly</option>
-                  <option value="yearly">Yearly</option>
-                </select>
-                <h2 className="card-title text-2xl">
-                  Spending History over time
-                </h2>
-              </div>
-              <p className="text-sm text-base-content/70 mb-4">
-                Use the brush chart below to zoom and pan through your spending
-                history
-              </p>
-            </div>
-            <div className="flex flex-col items-end gap-1 w-2/5">
-              <CurrencyDropdown
-                purchases={purchases}
-                selectedCurrency={selectedCurrency}
-                setSelectedCurrency={setSelectedCurrency}
-                conversionRates={conversionRates}
-                setConversionRates={setConversionRates}
-              />
-            </div>
+          <div className="flex items-center gap-2 mb-4">
+            <select
+              value={timeGrouping}
+              onChange={(e) =>
+                setTimeGrouping(e.target.value as TimeGrouping)
+              }
+              className="select select-bordered select-sm"
+            >
+              <option value="daily">Daily</option>
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+            <h2 className="card-title text-2xl">
+              Spending History over time
+            </h2>
           </div>
+          <p className="text-sm text-base-content/70 mb-4">
+            Use the brush chart below to zoom and pan through your spending
+            history
+          </p>
 
           <div className="flex flex-col gap-4">
             {/* Main detail chart */}
