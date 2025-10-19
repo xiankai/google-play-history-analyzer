@@ -6,36 +6,24 @@ A simple web application for visualizing and analyzing your Google Play Store pu
 
 ### 1. Pie Chart View with Drilldown
 
-Visualize your spending breakdown by application with an interactive pie chart that supports drill-down functionality.
+Visualize your spending breakdown by application with interactive pie charts with drill-down functionality.
 
 - **App-Level Overview**: See your total spending distributed across all apps with automatic grouping of small purchases into an "Others" category (bottom 5%)
-- **Drilldown to Purchases**: Click on any app to drill down into specific purchases and in-app items
+- **Drilldown to Purchases**: Click on any app slice to drill down into specific purchases and in-app items
 - **Smart Aggregation**: Automatically consolidates minor purchases to keep charts readable while maintaining accuracy
-- **Interactive Labels**: Each slice displays the app name and total amount spent for quick reference
 
 ### 2. Timeline View with Brush Navigation
 
-Track your spending over time with a dual-chart timeline interface featuring multiple time granularities.
+Track your spending over time with a dual-chart timeline interface featuring vertical bar charts and multiple time granularities.
 
 - **Multiple Time Groupings**: Switch between daily, monthly, and yearly views to analyze spending patterns at different scales
 - **Brush Chart Navigation**: Use the bottom overview chart to pan and zoom through your entire purchase history
-- **Detail Chart**: The main chart displays your selected time range with full interactivity
-- **Smart Defaults**:
-  - Daily view: Shows last 90 days by default
-  - Monthly view: Shows last year by default
-  - Yearly view: Shows last 3 years by default
-- **Visual Insights**: Area chart with gradient fill makes it easy to identify spending trends and spikes
 
-### 3. Currency Conversion Support
+### 3. Multi-Currency Display
 
-Convert your purchase history to any currency for unified reporting and comparison.
+View and analyze purchases across multiple currencies.
 
-- **Multi-Currency Support**: Works with all currencies found in your purchase history
-- **Real-Time Conversion**: Select your preferred currency from a dropdown and see all values update instantly
-- **Automatic Rate Fetching**: Exchange rates are fetched automatically from currency.js.org
-- **Persistent Rates**: Conversion rates are cached to improve performance
-
-**Important Disclaimer**: Currency conversions use current exchange rates, not historical rates from the time of purchase. The converted values are for reference purposes only and may not reflect the actual amounts charged at the time of transaction.
+- **Currency Selector**: Choose between "All currencies" to see separate breakdowns per currency, or select a specific currency to filter
 
 ## Getting Started
 
