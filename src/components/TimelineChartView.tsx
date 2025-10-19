@@ -58,70 +58,71 @@ export default function TimelineChartView({
 
   // When selectedCurrency is "", create multiple series (one per currency)
   // Otherwise, create a single series
-  const series = selectedCurrency === ""
-    ? currencies.map((currency) => {
-        const currencyData = Object.entries(groupedData)
-          .filter(([, data]) => data.currency === currency)
-          .map(([key, data]) => {
-            const timeKey = key.split("|")[0];
-            let timestamp: number;
-            if (timeGrouping === "daily") {
-              timestamp = new Date(timeKey).getTime();
-            } else if (timeGrouping === "monthly") {
-              timestamp = new Date(timeKey + "-01").getTime();
-            } else {
-              timestamp = new Date(timeKey + "-01-01").getTime();
-            }
-            return {
-              x: timestamp,
-              y: data.amount,
-            };
-          })
-          .sort((a, b) => a.x - b.x);
-
-        return {
-          name: `${currency} - ${
-            timeGrouping === "daily"
-              ? "Daily Spending"
-              : timeGrouping === "monthly"
-              ? "Monthly Spending"
-              : "Yearly Spending"
-          }`,
-          data: currencyData,
-        };
-      })
-    : [
-        {
-          name:
-            timeGrouping === "daily"
-              ? "Daily Spending"
-              : timeGrouping === "monthly"
-              ? "Monthly Spending"
-              : "Yearly Spending",
-          data: Object.entries(groupedData)
-            .sort(([a], [b]) => a.localeCompare(b))
+  const series =
+    selectedCurrency === ""
+      ? currencies.map((currency) => {
+          const currencyData = Object.entries(groupedData)
+            .filter(([, data]) => data.currency === currency)
             .map(([key, data]) => {
+              const timeKey = key.split("|")[0];
               let timestamp: number;
               if (timeGrouping === "daily") {
-                timestamp = new Date(key).getTime();
+                timestamp = new Date(timeKey).getTime();
               } else if (timeGrouping === "monthly") {
-                timestamp = new Date(key + "-01").getTime();
+                timestamp = new Date(timeKey + "-01").getTime();
               } else {
-                timestamp = new Date(key + "-01-01").getTime();
+                timestamp = new Date(timeKey + "-01-01").getTime();
               }
               return {
                 x: timestamp,
                 y: data.amount,
               };
-            }),
-        },
-      ];
+            })
+            .sort((a, b) => a.x - b.x);
+
+          return {
+            name: `${currency} - ${
+              timeGrouping === "daily"
+                ? "Daily Spending"
+                : timeGrouping === "monthly"
+                ? "Monthly Spending"
+                : "Yearly Spending"
+            }`,
+            data: currencyData,
+          };
+        })
+      : [
+          {
+            name:
+              timeGrouping === "daily"
+                ? "Daily Spending"
+                : timeGrouping === "monthly"
+                ? "Monthly Spending"
+                : "Yearly Spending",
+            data: Object.entries(groupedData)
+              .sort(([a], [b]) => a.localeCompare(b))
+              .map(([key, data]) => {
+                let timestamp: number;
+                if (timeGrouping === "daily") {
+                  timestamp = new Date(key).getTime();
+                } else if (timeGrouping === "monthly") {
+                  timestamp = new Date(key + "-01").getTime();
+                } else {
+                  timestamp = new Date(key + "-01-01").getTime();
+                }
+                return {
+                  x: timestamp,
+                  y: data.amount,
+                };
+              }),
+          },
+        ];
 
   // Main chart options (detail view)
   const mainChartOptions: ApexOptions = {
     chart: {
       id: "main-chart",
-      type: "area",
+      type: "bar",
       background: "transparent",
       toolbar: {
         autoSelected: "pan",
@@ -134,44 +135,31 @@ export default function TimelineChartView({
     theme: {
       mode: darkMode ? "dark" : "light",
     },
-    colors: selectedCurrency === ""
-      ? ["#4f46e5", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"]
-      : ["#4f46e5"],
-    stroke: {
-      width: 3,
+    colors:
+      selectedCurrency === ""
+        ? ["#4f46e5", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"]
+        : ["#4f46e5"],
+    plotOptions: {
+      bar: {
+        columnWidth:
+          timeGrouping === "daily"
+            ? "50%"
+            : timeGrouping === "monthly"
+            ? "70%"
+            : "80%",
+      },
     },
     dataLabels: {
       enabled: false,
     },
-    fill: {
-      type: "gradient",
-      gradient: {
-        shadeIntensity: 1,
-        opacityFrom: 0.7,
-        opacityTo: 0.3,
-        stops: [0, 100],
-      },
-    },
-    markers: {
-      size: 0,
-      hover: {
-        size: 5,
-      },
-    },
     xaxis: {
       type: "datetime",
       labels: {
-        datetimeFormatter: {
-          year: "yyyy",
-          month: timeGrouping === "yearly" ? "yyyy" : "MMM yyyy",
-          day: timeGrouping === "daily" ? "dd MMM yyyy" : "MMM yyyy",
-        },
         style: {
           colors: darkMode ? "#ffffff" : "#000000",
         },
+        hideOverlappingLabels: true,
       },
-      min: undefined,
-      max: undefined,
     },
     yaxis: {
       labels: {
@@ -220,7 +208,7 @@ export default function TimelineChartView({
   };
 
   // Brush chart options (overview/navigator)
-  const allDataPoints = series.flatMap(s => s.data);
+  const allDataPoints = series.flatMap((s) => s.data);
   const brushChartOptions: ApexOptions = {
     chart: {
       id: "brush-chart",
@@ -235,8 +223,8 @@ export default function TimelineChartView({
           min:
             allDataPoints.length > 0
               ? Math.max(
-                  Math.min(...allDataPoints.map(d => d.x)),
-                  Math.max(...allDataPoints.map(d => d.x)) -
+                  Math.min(...allDataPoints.map((d) => d.x)),
+                  Math.max(...allDataPoints.map((d) => d.x)) -
                     (timeGrouping === "daily"
                       ? 90 * 24 * 60 * 60 * 1000 // 90 days
                       : timeGrouping === "monthly"
@@ -246,7 +234,7 @@ export default function TimelineChartView({
               : undefined,
           max:
             allDataPoints.length > 0
-              ? Math.max(...allDataPoints.map(d => d.x))
+              ? Math.max(...allDataPoints.map((d) => d.x))
               : undefined,
         },
         fill: {
@@ -264,14 +252,18 @@ export default function TimelineChartView({
     theme: {
       mode: darkMode ? "dark" : "light",
     },
-    colors: selectedCurrency === ""
-      ? ["#4f46e5", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"]
-      : ["#4f46e5"],
-    fill: {
-      type: "gradient",
-      gradient: {
-        opacityFrom: 0.91,
-        opacityTo: 0.1,
+    colors:
+      selectedCurrency === ""
+        ? ["#4f46e5", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"]
+        : ["#4f46e5"],
+    plotOptions: {
+      bar: {
+        columnWidth:
+          timeGrouping === "daily"
+            ? "50%"
+            : timeGrouping === "monthly"
+            ? "70%"
+            : "80%",
       },
     },
     xaxis: {
@@ -283,6 +275,7 @@ export default function TimelineChartView({
         style: {
           colors: darkMode ? "#ffffff" : "#000000",
         },
+        hideOverlappingLabels: true,
       },
     },
     yaxis: {
@@ -306,18 +299,14 @@ export default function TimelineChartView({
           <div className="flex items-center gap-2 mb-4">
             <select
               value={timeGrouping}
-              onChange={(e) =>
-                setTimeGrouping(e.target.value as TimeGrouping)
-              }
+              onChange={(e) => setTimeGrouping(e.target.value as TimeGrouping)}
               className="select select-bordered select-sm"
             >
               <option value="daily">Daily</option>
               <option value="monthly">Monthly</option>
               <option value="yearly">Yearly</option>
             </select>
-            <h2 className="card-title text-2xl">
-              Spending History over time
-            </h2>
+            <h2 className="card-title text-2xl">Spending History over time</h2>
           </div>
           <p className="text-sm text-base-content/70 mb-4">
             Use the brush chart below to zoom and pan through your spending
@@ -330,7 +319,7 @@ export default function TimelineChartView({
               <Chart
                 options={mainChartOptions}
                 series={series}
-                type="area"
+                type="bar"
                 width="100%"
                 height="400"
               />
@@ -341,7 +330,7 @@ export default function TimelineChartView({
               <Chart
                 options={brushChartOptions}
                 series={series}
-                type="area"
+                type="bar"
                 width="100%"
                 height="130"
               />
