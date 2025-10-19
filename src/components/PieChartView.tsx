@@ -139,8 +139,6 @@ export default function PieChartView({
     }
   }
 
-  const totalSpent = appChartSeries.reduce((sum, val) => sum + val, 0);
-
   const chartOptions: ApexOptions = {
     chart: {
       type: "pie",
@@ -193,17 +191,7 @@ export default function PieChartView({
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
           <div className="flex justify-between items-start mb-4">
-            <div>
-              <h2 className="card-title text-2xl mb-4">
-                Spending Breakdown by App
-              </h2>
-              <p className="text-lg mb-4">
-                Total Spent:{" "}
-                <span className="font-bold">
-                  {formatCurrency(totalSpent, selectedCurrency)}
-                </span>
-              </p>
-            </div>
+            <h2 className="card-title text-2xl">Spending Breakdown by App</h2>
             <div className="flex flex-col items-end gap-1 w-2/5">
               <CurrencyDropdown
                 purchases={purchases}

@@ -12,7 +12,9 @@ interface TimelineChartViewProps {
   selectedCurrency: string;
   setSelectedCurrency: (currency: string) => void;
   conversionRates: Record<string, Record<string, string>>;
-  setConversionRates: React.Dispatch<React.SetStateAction<Record<string, Record<string, string>>>>;
+  setConversionRates: React.Dispatch<
+    React.SetStateAction<Record<string, Record<string, string>>>
+  >;
   darkMode: boolean;
 }
 
@@ -78,8 +80,6 @@ export default function TimelineChartView({
         y: total,
       };
     });
-
-  const totalSpent = chartData.reduce((sum, item) => sum + item.y, 0);
 
   const series = [
     {
@@ -265,14 +265,10 @@ export default function TimelineChartView({
                   <option value="monthly">Monthly</option>
                   <option value="yearly">Yearly</option>
                 </select>
-                <h2 className="card-title text-2xl">Spending Timeline</h2>
+                <h2 className="card-title text-2xl">
+                  Spending History over time
+                </h2>
               </div>
-              <p className="text-lg mb-4">
-                Total Spent:{" "}
-                <span className="font-bold">
-                  {formatCurrency(totalSpent, selectedCurrency)}
-                </span>
-              </p>
               <p className="text-sm text-base-content/70 mb-4">
                 Use the brush chart below to zoom and pan through your spending
                 history
