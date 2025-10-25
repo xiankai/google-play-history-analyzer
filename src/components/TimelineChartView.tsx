@@ -174,6 +174,8 @@ export default function TimelineChartView({
       },
     },
     tooltip: {
+      shared: true,
+      intersect: false,
       x: {
         format:
           timeGrouping === "daily"
