@@ -125,11 +125,10 @@ export default function TimelineChartView({
       type: "bar",
       background: "transparent",
       toolbar: {
-        autoSelected: "pan",
-        show: true,
+        show: false,
       },
       zoom: {
-        autoScaleYaxis: true,
+        enabled: false,
       },
     },
     theme: {
