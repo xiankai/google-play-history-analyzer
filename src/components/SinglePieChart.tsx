@@ -178,7 +178,7 @@ export default function SinglePieChart({
   };
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center [&_svg]:overflow-visible">
       {showTitle && <h3 className="text-xl font-semibold mb-4">{currency}</h3>}
       {selectedApp && (
         <>
