@@ -36,7 +36,7 @@ View and analyze purchases across multiple currencies.
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/google-play-history-analyzer.git
+git clone https://github.com/xiankai/google-play-history-analyzer.git
 cd google-play-history-analyzer
 ```
 
