@@ -93,7 +93,6 @@ function App() {
       });
 
       setPurchases(parsed);
-      setSelectedCurrency(parsed.length > 0 ? parsed[0].currency : "");
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     } catch (err) {
