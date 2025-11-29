@@ -206,13 +206,11 @@ function GoogleDriveIntegrationContent({
       // Check if it's a ZIP file
       if (fileName.toLowerCase().endsWith(".zip")) {
         await extractPurchaseHistoryFromZip(blob);
-      } else if (fileName.toLowerCase() === "purchase history.json") {
+      } else if (fileName.toLowerCase().endsWith(".json")) {
         const text = await blob.text();
         onFileLoaded(text);
       } else {
-        alert(
-          "Please select either a Purchase History.json file or a takeout ZIP file."
-        );
+        alert("Please select either a JSON file or a ZIP file.");
         setIsProcessing(false);
       }
     } catch (error) {
