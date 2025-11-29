@@ -8,6 +8,7 @@ import CurrencyDisplay from "./components/CurrencyDisplay";
 import GithubIcon from "./components/icons/GithubIcon";
 import SunIcon from "./components/icons/SunIcon";
 import MoonIcon from "./components/icons/MoonIcon";
+import GoogleDriveIntegration from "./components/GoogleDriveIntegration";
 import sampleData from "../public/sample-purchase-history.json";
 
 type ViewMode = "table" | "pie-chart" | "timeline";
@@ -23,6 +24,7 @@ function App() {
     return saved ? JSON.parse(saved) : false;
   });
   const [selectedCurrency, setSelectedCurrency] = useState<string>("");
+  const [showGoogleDrive, setShowGoogleDrive] = useState<boolean>(false);
 
   useEffect(() => {
     localStorage.setItem("darkMode", JSON.stringify(darkMode));
@@ -107,6 +109,30 @@ function App() {
     setFile({ name: "sample-purchase-history.json" } as File);
     analyzeData(sampleData as PurchaseData[]);
   };
+
+  const handleGoogleDriveFileLoaded = (content: string) => {
+    try {
+      setFile({ name: "Purchase History.json" } as File);
+      const data: PurchaseData[] = JSON.parse(content);
+      analyzeData(data);
+      setShowGoogleDrive(false);
+    } catch (err) {
+      setError(
+        "Failed to parse file from Google Drive. Please ensure it's a valid Google Play purchase history file."
+      );
+      console.error(err);
+    }
+  };
+
+  // If showing Google Drive integration, render it instead of the main content
+  if (showGoogleDrive) {
+    return (
+      <GoogleDriveIntegration
+        onFileLoaded={handleGoogleDriveFileLoaded}
+        onCancel={() => setShowGoogleDrive(false)}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-base-200">
@@ -265,6 +291,25 @@ function App() {
                     onChange={handleFileUpload}
                     className="file-input file-input-bordered file-input-primary w-full"
                   />
+                </div>
+
+                <div className="divider max-w-xs mx-auto">OR</div>
+
+                <div className="max-w-xs mx-auto">
+                  <button
+                    onClick={() => setShowGoogleDrive(true)}
+                    className="btn btn-outline btn-primary w-full"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 mr-2"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M12.945 1.379l-.652.763c1.577 1.462 2.707 3.267 3.23 5.308h.553c1.836 0 3.483.824 4.624 2.09a6.94 6.94 0 0 1 1.902 4.861c0 3.854-3.121 6.998-6.999 6.998H8.996C4.134 21.399 0 17.214 0 12.353 0 7.496 4.127 3.313 8.996 3.313h.553c.523-2.041 1.653-3.846 3.23-5.308l-.652-.763a.5.5 0 0 1 .818-.572zM8.996 4.313C4.687 4.313 1 8.048 1 12.353c0 4.31 3.687 8.046 7.996 8.046h6.607c3.326 0 5.999-2.693 5.999-5.998 0-3.306-2.673-5.998-5.999-5.998h-1.553v-.75c0-2.761-2.239-5-5-5z" />
+                    </svg>
+                    Import from Google Drive
+                  </button>
                 </div>
 
                 <div className="mt-6">

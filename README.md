@@ -57,11 +57,20 @@ npm run dev
 To use this analyzer, you'll need to export your Google Play purchase history:
 
 1. Go to [Google Takeout](https://takeout.google.com/)
-2. Deselect all and select only "Play Store"
-3. Choose JSON format for the export
-4. Download and extract your data
-5. Look for the purchase history JSON file (typically named `Purchase History.json`)
-6. Upload this file to the analyzer
+2. Deselect all and select only "Google Play Store"
+3. Ensure that the export is in JSON format
+4. Set the destination as "Send download link via email" or "Add to Drive"
+5. Wait for the export to complete.
+6. If "Send download link via email" was selected,
+
+    a. Download the file and unzip it.
+    b. Look for the purchase history JSON file (typically named `Purchase History.json`)
+    c. Upload this file to the analyzer
+7. If "Add to Drive" was selected,
+
+    a. On this page, select "Import from Google Drive" and login.
+    b. Locate the Google Takeout files (typically a `Takeout` folder and `takeout-xxx.zip` files)
+    c. Select the latest exported file.
 
 ## Technology Stack
 
