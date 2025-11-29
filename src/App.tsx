@@ -9,7 +9,7 @@ import GithubIcon from "./components/icons/GithubIcon";
 import SunIcon from "./components/icons/SunIcon";
 import MoonIcon from "./components/icons/MoonIcon";
 import GoogleDriveIntegration from "./components/GoogleDriveIntegration";
-import sampleData from "../public/sample-purchase-history.json";
+import sampleData from "./sample-purchase-history.json";
 
 type ViewMode = "table" | "pie-chart" | "timeline";
 
