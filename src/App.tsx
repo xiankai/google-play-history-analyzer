@@ -110,9 +110,9 @@ function App() {
     analyzeData(sampleData as PurchaseData[]);
   };
 
-  const handleGoogleDriveFileLoaded = (content: string) => {
+  const handleGoogleDriveFileLoaded = (content: string, filename: string) => {
     try {
-      setFile({ name: "Purchase History.json" } as File);
+      setFile({ name: filename } as File);
       const data: PurchaseData[] = JSON.parse(content);
       analyzeData(data);
       setShowGoogleDrive(false);

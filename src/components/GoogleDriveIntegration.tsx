@@ -11,7 +11,7 @@ const GOOGLE_API_KEY = "AIzaSyC38M52oH2yCkQjKF7PLlSC9jk3xpOGsPg";
 const SCOPES = "https://www.googleapis.com/auth/drive.readonly";
 
 interface GoogleDriveIntegrationProps {
-  onFileLoaded: (content: string) => void;
+  onFileLoaded: (content: string, filename: string) => void;
   onCancel: () => void;
 }
 
@@ -208,7 +208,7 @@ function GoogleDriveIntegrationContent({
         await extractPurchaseHistoryFromZip(blob);
       } else if (fileName.toLowerCase().endsWith(".json")) {
         const text = await blob.text();
-        onFileLoaded(text);
+        onFileLoaded(text, fileName);
       } else {
         alert("Please select either a JSON file or a ZIP file.");
         setIsProcessing(false);
@@ -256,7 +256,7 @@ function GoogleDriveIntegrationContent({
 
       if (purchaseHistoryFile) {
         const content = await purchaseHistoryFile.async("text");
-        onFileLoaded(content);
+        onFileLoaded(content, purchaseHistoryFile.name);
       } else if (Object.keys(zip.files).includes("archive_browser.html")) {
         alert(
           "Your selected ZIP file appears to contain `archive_browser.html`. Please select the other ZIP file with a similar name that contains your Purchase History."
