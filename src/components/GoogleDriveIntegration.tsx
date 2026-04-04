@@ -22,6 +22,7 @@ function GoogleDriveIntegrationContent({
   const [isProcessing, setIsProcessing] = useState(false);
   const [isAutoAuthenticating, setIsAutoAuthenticating] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   // Fetch user info from Google
   const fetchUserInfo = async (token: string) => {
@@ -32,7 +33,7 @@ function GoogleDriveIntegrationContent({
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (response.ok) {
@@ -87,13 +88,12 @@ function GoogleDriveIntegrationContent({
     onSuccess: (tokenResponse) => {
       saveToken(tokenResponse.access_token, tokenResponse.expires_in || 3600);
       setIsAutoAuthenticating(false);
+      setAuthError(null);
     },
     onError: (error) => {
       console.error("Login failed:", error);
       setIsAutoAuthenticating(false);
-      if (!isAutoAuthenticating) {
-        alert("Login failed. Please try again.");
-      }
+      setAuthError(null);
     },
     scope: SCOPES,
   });
@@ -102,15 +102,20 @@ function GoogleDriveIntegrationContent({
   const handleSilentAuth = useCallback((tokenResponse: any) => {
     saveToken(tokenResponse.access_token, tokenResponse.expires_in || 3600);
     setIsAutoAuthenticating(false);
+    setAuthError(null);
   }, []);
 
   const handleSilentAuthError = useCallback((error: any) => {
     console.error("Silent authentication failed:", error);
     setIsAutoAuthenticating(false);
+
     // Clear stored tokens if silent auth fails
     localStorage.removeItem("googleDriveAccessToken");
     localStorage.removeItem("googleDriveTokenExpiry");
     setAccessToken(null);
+
+    // Show error so user isn't stuck on "Authenticating..."
+    setAuthError("Automatic sign-in failed. Please sign in manually.");
   }, []);
 
   // Silent login (automatic re-authentication)
@@ -126,7 +131,7 @@ function GoogleDriveIntegrationContent({
     const savedToken = localStorage.getItem("googleDriveAccessToken");
     const tokenExpiry = localStorage.getItem("googleDriveTokenExpiry");
     const hasAuthenticated = localStorage.getItem(
-      "googleDriveHasAuthenticated"
+      "googleDriveHasAuthenticated",
     );
     const savedEmail = localStorage.getItem("googleDriveUserEmail");
 
@@ -192,7 +197,7 @@ function GoogleDriveIntegrationContent({
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
-        }
+        },
       );
 
       if (!response.ok) {
@@ -257,7 +262,7 @@ function GoogleDriveIntegrationContent({
         onFileLoaded(content, purchaseHistoryFile.name);
       } else if (Object.keys(zip.files).includes("archive_browser.html")) {
         alert(
-          "Your selected ZIP file appears to contain `archive_browser.html`. Please select the other ZIP file with a similar name that contains your Purchase History."
+          "Your selected ZIP file appears to contain `archive_browser.html`. Please select the other ZIP file with a similar name that contains your Purchase History.",
         );
         setIsProcessing(false);
       } else {
@@ -323,6 +328,33 @@ function GoogleDriveIntegrationContent({
         <div className="card-body">
           <h2 className="card-title text-2xl mb-4">Google Drive Integration</h2>
 
+          {authError && (
+            <div className="alert alert-error mb-4">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="stroke-current shrink-0 h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <div className="flex-1">
+                <span>{authError}</span>
+              </div>
+              <button
+                onClick={() => setAuthError(null)}
+                className="btn btn-sm btn-circle btn-ghost"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
           {isAutoAuthenticating ? (
             <div className="flex flex-col items-center py-8">
               <span className="loading loading-spinner loading-lg mb-4"></span>
@@ -338,7 +370,13 @@ function GoogleDriveIntegrationContent({
                 Stay signed in to Google for automatic re-authentication.
               </p>
               <div className="card-actions justify-center">
-                <button onClick={() => login()} className="btn btn-primary">
+                <button
+                  onClick={() => {
+                    setAuthError(null);
+                    login();
+                  }}
+                  className="btn btn-primary"
+                >
                   Sign in with Google
                 </button>
               </div>
@@ -412,7 +450,7 @@ function GoogleDriveIntegrationContent({
 }
 
 export default function GoogleDriveIntegration(
-  props: GoogleDriveIntegrationProps
+  props: GoogleDriveIntegrationProps,
 ) {
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>

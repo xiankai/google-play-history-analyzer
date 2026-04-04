@@ -157,7 +157,7 @@ The project includes a GitHub Actions workflow that automatically deploys to Git
    - Under **Source**, select **GitHub Actions**
 
 2. Add environment variables:
-   - Go to **Settings** > **Environments** > **gh-pages**
+   - Go to **Settings** > **Environments** > **github-pages**
    - Under **Environment variables**, add:
      - `GOOGLE_CLIENT_ID`: Your Google OAuth Client ID
      - `GOOGLE_API_KEY`: Your Google API Key
