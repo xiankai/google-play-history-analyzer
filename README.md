@@ -45,12 +45,23 @@ cd google-play-history-analyzer
 npm install
 ```
 
-3. Start the development server:
+3. Set up environment variables:
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and add your Google API credentials:
+- `VITE_GOOGLE_CLIENT_ID`: Your Google OAuth 2.0 Client ID
+- `VITE_GOOGLE_API_KEY`: Your Google API Key (for Picker API)
+
+See [Getting Google API Credentials](#getting-google-api-credentials) for instructions.
+
+4. Start the development server:
 ```bash
 npm run dev
 ```
 
-4. Open your browser and navigate to `http://localhost:5173`
+5. Open your browser and navigate to `http://localhost:5173`
 
 ### Obtaining Your Google Play Purchase History
 
@@ -89,13 +100,71 @@ npm run build
 
 The built files will be in the `dist` directory.
 
+## Getting Google API Credentials
+
+To enable the Google Drive integration feature, you need to set up Google Cloud credentials:
+
+### 1. Create a Google Cloud Project
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+
+### 2. Enable Required APIs
+
+1. Go to **APIs & Services** > **Library**
+2. Search for and enable:
+   - **Google Picker API**
+   - **Google Drive API**
+
+### 3. Create OAuth 2.0 Client ID
+
+1. Go to **APIs & Services** > **Credentials**
+2. Click **Create Credentials** > **OAuth client ID**
+3. Choose **Web application**
+4. Add authorized JavaScript origins:
+   - `http://localhost:5173` (for local development)
+   - `https://yourusername.github.io` (for production)
+5. Copy the **Client ID** (starts with `...apps.googleusercontent.com`)
+
+### 4. Create API Key
+
+1. In **Credentials**, click **Create Credentials** > **API key**
+2. Click **Edit API key** to restrict it:
+   - Under **API restrictions**, select **Restrict key**
+   - Select **Google Picker API**
+   - Under **Website restrictions**, add your domains
+3. Copy the **API key**
+
 ## Deployment
 
-This project includes a deployment script for GitHub Pages:
+### Option 1: Manual Deployment (Local)
+
+1. Create a `.env` file with your credentials (see [Installation](#installation))
+2. Run the deployment script:
 
 ```bash
 npm run deploy
 ```
+
+### Option 2: Automatic Deployment (GitHub Actions)
+
+The project includes a GitHub Actions workflow that automatically deploys to GitHub Pages on every push to `main`.
+
+**Setup:**
+
+1. Enable GitHub Pages in your repository:
+   - Go to **Settings** > **Pages**
+   - Under **Source**, select **GitHub Actions**
+
+2. Add repository secrets:
+   - Go to **Settings** > **Secrets and variables** > **Actions**
+   - Add the following secrets:
+     - `VITE_GOOGLE_CLIENT_ID`: Your Google OAuth Client ID
+     - `VITE_GOOGLE_API_KEY`: Your Google API Key
+
+3. Push to `main` branch - the workflow will build and deploy automatically
+
+The workflow uses the official GitHub Pages deployment actions with commit hash pinning for security. It runs on every push to the main branch and prevents concurrent deployments.
 
 ## Privacy
 
