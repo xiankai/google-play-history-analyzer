@@ -156,11 +156,11 @@ The project includes a GitHub Actions workflow that automatically deploys to Git
    - Go to **Settings** > **Pages**
    - Under **Source**, select **GitHub Actions**
 
-2. Add repository secrets:
-   - Go to **Settings** > **Secrets and variables** > **Actions**
-   - Add the following secrets:
-     - `VITE_GOOGLE_CLIENT_ID`: Your Google OAuth Client ID
-     - `VITE_GOOGLE_API_KEY`: Your Google API Key
+2. Add environment variables:
+   - Go to **Settings** > **Environments** > **gh-pages**
+   - Under **Environment variables**, add:
+     - `GOOGLE_CLIENT_ID`: Your Google OAuth Client ID
+     - `GOOGLE_API_KEY`: Your Google API Key
 
 3. Push to `main` branch - the workflow will build and deploy automatically
 
