@@ -2,10 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { GoogleOAuthProvider, useGoogleLogin } from "@react-oauth/google";
 import JSZip from "jszip";
 
-const GOOGLE_CLIENT_ID =
-  "772781954408-rrb2duvl9e512a1ba6fbhjvjo9vhqj30.apps.googleusercontent.com";
-
-const GOOGLE_API_KEY = "AIzaSyC38M52oH2yCkQjKF7PLlSC9jk3xpOGsPg";
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
 
 // Google Drive API scopes needed
 const SCOPES = "https://www.googleapis.com/auth/drive.readonly";
